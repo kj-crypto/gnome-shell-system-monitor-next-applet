@@ -393,12 +393,68 @@ const Chart = class SystemMonitor_Chart {
                 cr.lineTo(x, (1 - this.data[i][0] / max) * height);
                 cr.lineTo(x, height);
                 cr.closePath();
-                Clutter.cairo_set_source_color(cr, this.parentC.colors[i]);
+                Clutter.cairo_set_source_color(cr, this.getDynamicColor(i));
                 cr.fill();
             }
         }
         cr.$dispose();
     }
+
+    getDynamicColor(index) {
+        // Memory monitor dynamic colors
+        if (this.parentC.elt === 'memory') {
+            const currentUsage = this.parentC.vals[index] * 100;
+
+            if (currentUsage >= 90) {
+                // Critical: Red shades
+                const criticalColors = ['#ff0000', '#cc0000', '#990000'];
+                return color_from_string(criticalColors[index] || criticalColors[0]);
+            } else if (currentUsage >= 75) {
+                // High: Orange shades
+                const highColors = ['#ff8800', '#ff6600', '#ff4400'];
+                return color_from_string(highColors[index] || highColors[0]);
+            } else if (currentUsage >= 50) {
+                // Medium: Yellow shades
+                const mediumColors = ['#ffcc00', '#ffaa00', '#ff8800'];
+                return color_from_string(mediumColors[index] || mediumColors[0]);
+            } else {
+                // Low: Green shades (default colors)
+                const lowColors = ['#00b35b', '#00ff82', '#aaf5d0'];
+                return color_from_string(lowColors[index] || lowColors[0]);
+            }
+        }
+
+        // CPU monitor dynamic colors
+        if (this.parentC.elt === 'cpu') {
+            const currentUsage = this.parentC.vals[index];
+
+            if (currentUsage >= 90) {
+                // Critical: Red shades for high CPU usage
+                const criticalColors = ['#ff0000', '#cc0000', '#ff3333', '#990000', '#ff6666'];
+                return color_from_string(criticalColors[index] || criticalColors[0]);
+            } else if (currentUsage >= 75) {
+                // High: Orange shades
+                const highColors = ['#ff8800', '#ff6600', '#ffaa00', '#ff4400', '#ff9900'];
+                return color_from_string(highColors[index] || highColors[0]);
+            } else if (currentUsage >= 50) {
+                // Medium: Yellow shades
+                const mediumColors = ['#ffcc00', '#ffaa00', '#ffdd00', '#ff8800', '#ffbb00'];
+                return color_from_string(mediumColors[index] || mediumColors[0]);
+            } else if (currentUsage >= 25) {
+                // Low-Medium: Blue-Green shades (transition from default)
+                const lowMediumColors = ['#00a3ff', '#0092e6', '#00b3ff', '#0072b3', '#0088cc'];
+                return color_from_string(lowMediumColors[index] || lowMediumColors[0]);
+            } else {
+                // Low: Default blue shades (normal operation)
+                const lowColors = ['#0072b3', '#0092e6', '#00a3ff', '#002f3d', '#001d26'];
+                return color_from_string(lowColors[index] || lowColors[0]);
+            }
+        }
+
+        // Default: use original colors for all other monitors
+        return this.parentC.colors[index];
+    }
+
     resize(width) {
         if (this.width === width) {
             return;
